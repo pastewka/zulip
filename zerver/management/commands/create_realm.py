@@ -2,8 +2,6 @@ from zerver.lib.actions import Realm, do_create_realm
 from zerver.lib.domains import validate_domain
 from zerver.lib.management import ZulipBaseCommand
 
-import re
-import sys
 
 class Command(ZulipBaseCommand):
     help = """Create a realm."""
