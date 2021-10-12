@@ -10,6 +10,7 @@ from django.db.utils import IntegrityError
 from zerver.lib.actions import do_create_user
 from zerver.lib.initial_password import initial_password
 from zerver.lib.management import ZulipBaseCommand
+from zerver.models import UserProfile
 
 
 class Command(ZulipBaseCommand):
@@ -55,6 +56,12 @@ Omit both <email> and <full name> for interactive user creation.
         self.add_realm_args(
             parser, required=True, help="The name of the existing realm to which to add the user."
         )
+        parser.add_argument(
+            "--is-realm-owner",
+            dest="is_realm_owner",
+            action="store_true",
+            help="This user is an owner of the realm."
+        )
 
     def handle(self, *args: Any, **options: Any) -> None:
         if not options["tos"]:
@@ -99,12 +106,16 @@ parameters, or specify no parameters for interactive user creation."""
                 if user_initial_password is None:
                     raise CommandError("Password is unusable.")
                 pw = user_initial_password
+            kwargs = {}
+            if options["is_realm_owner"]:
+                kwargs["role"] = UserProfile.ROLE_REALM_OWNER
             do_create_user(
                 email,
                 pw,
                 realm,
                 full_name,
                 acting_user=None,
+                **kwargs,
             )
         except IntegrityError:
             raise CommandError("User already exists.")
